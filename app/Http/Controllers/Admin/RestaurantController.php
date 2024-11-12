@@ -17,8 +17,8 @@ class RestaurantController extends Controller
         $keyword = $request->input('keyword');
 
         if ($keyword !== null) {
-            $restaurants = Restaurant::where('name', 'like', "%{$keyword}%");
-                        // ->paginate(15);
+            $restaurants = Restaurant::where('name', 'like', "%{$keyword}%")
+                        ->paginate(15);
             $total = $restaurants->total();
         } else {
             $restaurants = Restaurant::paginate(15);

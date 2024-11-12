@@ -125,13 +125,12 @@ class RestaurantTest extends TestCase
     // ログイン済みの管理者は店舗を登録できる
     public function test_admin_user_can_access_admin_restaurant_store()
     {
-        $user = User::factory()->create();
         $adminUser = User::factory()->create(['email' => 'admin@example.com']);
-        $restaurant = Restaurant::factory()->create();
+        $restaurantData = Restaurant::factory()->make()->toArray();
 
-        $response = $this->actingAs($adminUser, 'admin')->post(route('admin.restaurants.store', $restaurant));
-        $this->assertDatabaseHas('restaurants', $restaurant->toArray());
-        $response->assertStatus(200);
+        $response = $this->actingAs($adminUser, 'admin')->post(route('admin.restaurants.store', $restaurantData));
+        $this->assertDatabaseHas('restaurants', $restaurantData);
+        $response->assertRedirect(route('admin.restaurants.index'));
     }
 
     // editアクション？
@@ -156,10 +155,10 @@ class RestaurantTest extends TestCase
     // ログイン済みの管理者は管理者側の店舗編集ページにアクセスできる
     public function test_admin_user_can_access_admin_restaurant_edit()
     {
-        $user = User::factory()->create();
         $adminUser = User::factory()->create(['email' => 'admin@example.com']);
+        $restaurant = Restaurant::factory()->create();
 
-        $response = $this->actingAs($adminUser, 'admin')->get(route('admin.restaurants.edit', $user));
+        $response = $this->actingAs($adminUser, 'admin')->get(route('admin.restaurants.edit', $restaurant));
         $response->assertStatus(200);
     }
 
@@ -239,9 +238,16 @@ class RestaurantTest extends TestCase
     public function test_guest_user_cannot_destroy_restaurant()
     {
         $restaurant = Restaurant::factory()->create();
+        $restaurantData = $restaurant->toArray();
+
+        $restaurantData['lowest_price'] = (int) $restaurantData['lowest_price'];
+        $restaurantData['highest_price'] = (int) $restaurantData['highest_price'];
+        $restaurantData['seating_capacity'] = (int) $restaurantData['seating_capacity'];
+
+        unset($restaurantData['created_at'], $restaurantData['updated_at']);
 
         $response = $this->delete(route('admin.restaurants.destroy', $restaurant));
-        $this->assertDatabaseHas('restaurants', $restaurant->toArray());
+        $this->assertDatabaseHas('restaurants', $restaurantData);
         $response->assertRedirect(route('admin.login'));
     }
 
@@ -250,9 +256,16 @@ class RestaurantTest extends TestCase
     {
         $user = User::factory()->create();
         $restaurant = Restaurant::factory()->create();
+        $restaurantData = $restaurant->toArray();
 
-        $response = $this->actingAs($user)->delete(route('admin.restaurants.destroy', $restaurant));
-        $this->assertDatabaseHas('restaurants', $restaurant->toArray());
+        $restaurantData['lowest_price'] = (int) $restaurantData['lowest_price'];
+        $restaurantData['highest_price'] = (int) $restaurantData['highest_price'];
+        $restaurantData['seating_capacity'] = (int) $restaurantData['seating_capacity'];
+
+        unset($restaurantData['created_at'], $restaurantData['updated_at']);
+
+        $response = $this->actingAs($user, 'web')->delete(route('admin.restaurants.destroy', $restaurant));
+        $this->assertDatabaseHas('restaurants', $restaurantData);
         $response->assertRedirect(route('admin.login'));
     }
 
