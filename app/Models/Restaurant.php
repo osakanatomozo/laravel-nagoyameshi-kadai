@@ -14,4 +14,9 @@ class Restaurant extends Model
         'highest_price' => 'integer',
         'seating_capacity' => 'integer',
     ];
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class)->withTimestamps();
+    }
 }

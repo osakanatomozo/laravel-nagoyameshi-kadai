@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Restaurant;
+use App\Models\Category;
 
 class RestaurantController extends Controller
 {
@@ -35,7 +36,8 @@ class RestaurantController extends Controller
      */
     public function create()
     {
-        return view('admin.restaurants.create');
+        $categories = Category::all();
+        return view('admin.restaurants.create', compact('categories'));
     }
 
     /**
@@ -44,7 +46,7 @@ class RestaurantController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $request->validate([
             // 入力必須
             'name' => 'required',
             // 画像ファイル（jpg、jpeg、png、bmp、gif、svg、webp）のみ許可、最大値2048キロバイト
@@ -67,24 +69,26 @@ class RestaurantController extends Controller
 
 
         $restaurant = new Restaurant();
-        $restaurant->name = $validatedData['name'];
-        $restaurant->description = $validatedData['description'];
-        $restaurant->lowest_price = $validatedData['lowest_price'];
-        $restaurant->highest_price = $validatedData['highest_price'];
-        $restaurant->postal_code = $validatedData['postal_code'];
-        $restaurant->address = $validatedData['address'];
-        $restaurant->opening_time = $validatedData['opening_time'];
-        $restaurant->closing_time = $validatedData['closing_time'];
-        $restaurant->seating_capacity =$validatedData['seating_capacity'];
-
+        $restaurant->name = $request->input('name');
         if($request->hasFile('image')) {
-            $image_path = $request->file('image')->store('public/restaurants');
-            $restaurant->image = basename($image_path);
+            $image = $request->file('image')->store('public/restaurants');
+            $restaurant->image = basename($image);
         } else {
             $restaurant->image = '';
         }
+        $restaurant->description = $request->input('description');
+        $restaurant->lowest_price = $request->input('lowest_price');
+        $restaurant->highest_price = $request->input('highest_price');
+        $restaurant->postal_code = $request->input('postal_code');
+        $restaurant->address = $request->input('address');
+        $restaurant->opening_time = $request->input('opening_time');
+        $restaurant->closing_time = $request->input('closing_time');
+        $restaurant->seating_capacity = $request->input('seating_capacity');
 
         $restaurant->save();
+
+        $category_ids = array_filter($request->input('category_ids'));
+        $restaurant->categories()->sync($category_ids);
 
         return redirect()->route('admin.restaurants.index')->with('flash_message', '店舗を登録しました。');
 
@@ -105,7 +109,11 @@ class RestaurantController extends Controller
      */
     public function edit(Restaurant $restaurant)
     {
-        return view('admin.restaurants.edit', compact('restaurant'));
+        $categories = Category::all();
+        // 設定されたカテゴリのIDを配列化する
+        $category_ids = $restaurant->categories->pluck('id')->toArray();
+
+        return view('admin.restaurants.edit', compact('restaurant', 'categories', 'category_ids'));
     }
 
     /**
@@ -114,7 +122,7 @@ class RestaurantController extends Controller
      */
     public function update(Request $request, Restaurant $restaurant)
     {
-        $validatedData = $request->validate([
+        $request->validate([
             'name' => 'required',
             'image' => 'nullable|image|max:2048',
             'description' => 'required',
@@ -127,22 +135,26 @@ class RestaurantController extends Controller
             'seating_capacity' => 'required|numeric|min:0',
         ]);
 
-        $restaurant->name = $validatedData['name'];
-        $restaurant->description = $validatedData['description'];
-        $restaurant->lowest_price = $validatedData['lowest_price'];
-        $restaurant->highest_price = $validatedData['highest_price'];
-        $restaurant->postal_code = $validatedData['postal_code'];
-        $restaurant->address = $validatedData['address'];
-        $restaurant->opening_time = $validatedData['opening_time'];
-        $restaurant->closing_time = $validatedData['closing_time'];
-        $restaurant->seating_capacity =$validatedData['seating_capacity'];
-
+        $restaurant->name = $request->input('name');
         if($request->hasFile('image')) {
-            $image_path = $request->file('image')->store('public/restaurants');
-            $restaurant->image = basename($image_path);
+            $image = $request->file('image')->store('public/restaurants');
+            $restaurant->image = basename($image);
+        } else {
+            $restaurant->image = '';
         }
+        $restaurant->description = $request->input('description');
+        $restaurant->lowest_price = $request->input('lowest_price');
+        $restaurant->highest_price = $request->input('highest_price');
+        $restaurant->postal_code = $request->input('postal_code');
+        $restaurant->address = $request->input('address');
+        $restaurant->opening_time = $request->input('opening_time');
+        $restaurant->closing_time = $request->input('closing_time');
+        $restaurant->seating_capacity = $request->input('seating_capacity');
 
         $restaurant->save();
+
+        $category_ids = array_filter($request->input('category_ids'));
+        $restaurant->categories()->sync($category_ids);
 
         return redirect()->route('admin.restaurants.show', $restaurant)->with('flash_message', '店舗を編集しました。');
 
