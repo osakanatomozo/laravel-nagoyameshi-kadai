@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Restaurant;
 use App\Models\Category;
+use App\Models\RegularHoliday;
 
 class RestaurantController extends Controller
 {
@@ -37,7 +38,8 @@ class RestaurantController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return view('admin.restaurants.create', compact('categories'));
+        $regular_holidays = RegularHoliday::all();
+        return view('admin.restaurants.create', compact('categories', 'regular_holidays'));
     }
 
     /**
@@ -47,23 +49,15 @@ class RestaurantController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // 入力必須
             'name' => 'required',
-            // 画像ファイル（jpg、jpeg、png、bmp、gif、svg、webp）のみ許可、最大値2048キロバイト
             'image' => 'image|max:2048',
             'description' => 'required',
-            // 入力必須、数値のみ許可、最小値0、highest_price以下
             'lowest_price' => 'required|numeric|min:0|lte:highest_price',
-            // 入力必須、数値のみ許可、最小値0、lowest_price以上
             'highest_price' => 'required|numeric|min:0|gte:lowest_price',
-            // 入力必須、数値かつ桁数7
             'postal_code' => 'required|numeric|digits:7',
             'address' => 'required',
-            // 入力必須、closing_timeより前の時間
             'opening_time' => 'required|before:closing_time',
-            // 入力必須、opening_timeより後の時間
             'closing_time' => 'required|after:opening_time',
-            // 入力必須、数値のみ許可、最小値0
             'seating_capacity' => 'required|numeric|min:0',
         ]);
 
@@ -90,6 +84,9 @@ class RestaurantController extends Controller
         $category_ids = array_filter($request->input('category_ids'));
         $restaurant->categories()->sync($category_ids);
 
+        $regular_holiday_ids = array_filter($request->input('regular_holiday_ids'));
+        $restaurant->regular_holidays()->sync($regular_holiday_ids);
+
         return redirect()->route('admin.restaurants.index')->with('flash_message', '店舗を登録しました。');
 
     }
@@ -112,8 +109,9 @@ class RestaurantController extends Controller
         $categories = Category::all();
         // 設定されたカテゴリのIDを配列化する
         $category_ids = $restaurant->categories->pluck('id')->toArray();
+        $regular_holidays = RegularHoliday::all();
 
-        return view('admin.restaurants.edit', compact('restaurant', 'categories', 'category_ids'));
+        return view('admin.restaurants.edit', compact('restaurant', 'categories', 'category_ids', 'regular_holidays'));
     }
 
     /**
@@ -155,6 +153,9 @@ class RestaurantController extends Controller
 
         $category_ids = array_filter($request->input('category_ids'));
         $restaurant->categories()->sync($category_ids);
+
+        $regular_holiday_ids = array_filter($request->input('regular_holiday_ids'));
+        $restaurant->regular_holidays()->sync($regular_holiday_ids);
 
         return redirect()->route('admin.restaurants.show', $restaurant)->with('flash_message', '店舗を編集しました。');
 
