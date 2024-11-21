@@ -8,8 +8,7 @@ use Kyslik\ColumnSortable\Sortable;
 
 class Restaurant extends Model
 {
-    use HasFactory;
-    use Sortable;
+    use HasFactory, Sortable;
 
     protected $casts = [
         'lowest_price' => 'integer',
