@@ -38,11 +38,8 @@ class ReviewController extends Controller
      * Store a newly created resource in storage.
      * レビュー投稿機能
      */
-    public function store(Request $request)
+    public function store(Request $request, Restaurant $restaurant)
     {
-        // AI先生のアドバイス　下記1行追加
-        \Log::info($request->all());
-
         $request->validate([
             'score' => 'required|integer|between:1,5',
             'content' => 'required',
@@ -51,15 +48,11 @@ class ReviewController extends Controller
         $review = new Review();
         $review->score = $request->input('score');
         $review->content = $request->input('content');
-        $review->restaurant_id = $request->input('restaurant_id');
+        $review->restaurant_id = $restaurant->id;
         $review->user_id = Auth::user()->id;
         $review->save();
 
-        // AI先生のアドバイス　$restaurant変数と$reviews変数を渡す
-        $restaurant = Restaurant::find($request->input('restaurant_id'));
-        $reviews = Review::where('restaurant_id', $restaurant->id)->orderBy('created_at', 'desc')->get();
-
-        return view('reviews.index', compact('restaurant', 'reviews'))->with('flash_message', 'レビューを投稿しました。');
+        return redirect()->route('restaurants.reviews.index', ['restaurant' => $restaurant->id])->with('flash_message', 'レビューを投稿しました。');
 
     }
 
@@ -73,7 +66,7 @@ class ReviewController extends Controller
             return view('reviews.index', $restaurant)->with('error_message', '不正なアクセスです。');
         }
 
-        return view('reviews.edit', compact('restaurant', 'reviews'));
+        return view('reviews.edit', compact('restaurant', 'review'));
     }
 
     /**
@@ -92,10 +85,12 @@ class ReviewController extends Controller
         }
 
         $review->score = $request->input('score');
+        $review->content = $request->input('content');
+        $review->restaurant_id = $restaurant->id;
         $review->user_id = Auth::user()->id;
         $review->save();
 
-        return view('reviews.index', $restaurant)->with('flash_message', 'レビューを編集しました。');
+        return redirect()->route('restaurants.reviews.index', ['restaurant' => $restaurant->id])->with('flash_message', 'レビューを編集しました。');
 
     }
 
@@ -105,13 +100,13 @@ class ReviewController extends Controller
      */
     public function destroy(Restaurant $restaurant, Review $review)
     {
-        if ($reviews->user_id !== Auth::id()) {
-            return view('reviews.index', $restaurant)->with('error_message', '不正なアクセスです。');
+        if ($review->user_id !== Auth::id()) {
+            return redirect()->route('restaurants.reviews.index', ['restaurant' => $restaurant->id])->with('error_message', '不正なアクセスです。');
         }
 
         $review->delete();
 
-        return redirect()->route('reviews.index')->with('flash_message', 'レビューを削除しました。');
+        return redirect()->route('restaurants.reviews.index', ['restaurant' => $restaurant->id])->with('flash_message', 'レビューを削除しました。');
 
     }
 }

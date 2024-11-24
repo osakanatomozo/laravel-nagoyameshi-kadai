@@ -50,8 +50,6 @@
 
                 <form method="POST" action="{{ route('restaurants.reviews.store', $restaurant) }}">
                     @csrf
-                    <!-- AI先生のアドバイス　下記1行追加 -->
-                    <input type="hidden" name="restaurant_id" value="{{ $restaurant->id }}">
 
                     <div class="mb-3">
                         <label class="form-label text-md-left fw-bold">評価</label>
