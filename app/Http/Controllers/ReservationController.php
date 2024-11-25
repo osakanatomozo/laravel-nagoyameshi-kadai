@@ -33,8 +33,17 @@ class ReservationController extends Controller
      */
     public function store(Request $request, Restaurant $restaurant)
     {
+        $today = date_format(now(),"Y-m-d H:i");
+        $input_datetime = $request->input('reservation_date') . ' ' . $request->input('reservation_time');
+
+        if($today>$input_datetime){
+            return redirect()->back()
+            ->withInput()
+            ->with('flash_message', '現在時刻より前の予約はできません。');
+        }
+
         $request->validate([
-            'reservation_date' => 'required|date_format:"Y-m-d"',
+            'reservation_date' => 'required|date_format:"Y-m-d|after_or_equal:today"',
             'reservation_time' => 'required|date_format:H:i',
             'number_of_people' => 'required|integer|between:1,50',
         ]);
