@@ -43,4 +43,8 @@ class Restaurant extends Model
     public function popularSortable($query, $direction) {
         return $query->withCount('reservations')->orderBy('reservations_count', $direction);
     }
+
+    public function favorited_users() {
+        return $this->belongsToMany(User::class, 'restaurant_user');
+    }
 }

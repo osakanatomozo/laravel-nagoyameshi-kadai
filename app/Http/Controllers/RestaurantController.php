@@ -29,7 +29,9 @@ class RestaurantController extends Controller
         ];
 
         // デフォルト並び順を設定
-        $sort_query = [];
+        $sort_query = [
+            'lowest_price' => 'asc',
+        ];
         $sorted = "created_at desc";
 
         if ($request->has('select_sort')) {
